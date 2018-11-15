@@ -9,8 +9,8 @@ BUNDLE_AR=ar rcs
 bin/%.o: src/%.c
 	${CC} -g -o $@ -c $< ${CFLAGS}
 
-bin/main.exe: bin/main.o bin/menu.o bin/entry.o bin/file.o
-	${CC} -g bin/main.o bin/menu.o bin/entry.o bin/file.o ${CFLAGS} -o $@
+bin/main.exe: bin/main.o bin/menu.o bin/entry.o bin/file.o bin/index.o
+	${CC} -g bin/main.o bin/menu.o bin/entry.o bin/file.o bin/index.o ${CFLAGS} -o $@
 
 .PHONY: clean install
 
