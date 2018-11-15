@@ -49,6 +49,16 @@ void insert(size_t qty, Entry *regs) {
 //Parametros: Numero, ponteiro para armazenar o registro, arquivo, ponteiro para armazenar posicao relativa do registro no arquivo.
 //Retorno:    Booelano, indicando se foi ou nao encontrado o registro.
 bool find_by_entry_number(unsigned int number, Entry *result, FILE *file, size_t *pos) {
+	// Abre o arquivo se não tiver sido passado
+	if(file == NULL) {
+		file = fopen(_FNAME, "rb+");
+	}
+
+	if(file == NULL) {
+		puts(ERR_FILE_NOT_FOUND);
+		return false;
+	}
+
 	rewind(file);
 
 	while(read_entry(file, result) && number > 0) { // MEMORY LEAK!
@@ -63,6 +73,16 @@ bool find_by_entry_number(unsigned int number, Entry *result, FILE *file, size_t
 //Parametros: Chave, ponteiro para armazenar o registro, arquivo, ponteiro para armazenar posicao relativa do registro no arquivo.
 //Retorno:    Booelano, indicando se foi ou nao encontrado o registro.
 bool find_by_entry_key(unsigned int key, Entry *result, FILE *file, size_t *pos) {
+	// Abre o arquivo se não tiver sido passado
+	if(file == NULL) {
+		file = fopen(_FNAME, "rb+");
+	}
+
+	if(file == NULL) {
+		puts(ERR_FILE_NOT_FOUND);
+		return false;
+	}
+
 	rewind(file);
 	
 	while(read_entry(file, result) && (result->removed || result->key != key)) {
