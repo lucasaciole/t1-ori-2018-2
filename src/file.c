@@ -45,6 +45,9 @@ void insert(size_t qty, Entry *regs) {
 	fclose(file);
 }
 
+//Objetivo:   Encontrar um registro, a partir do seu numero (posicao) no arquivo, armazena-lo guardando tambem sua posicao.
+//Parametros: Numero, ponteiro para armazenar o registro, arquivo, ponteiro para armazenar posicao relativa do registro no arquivo.
+//Retorno:    Booelano, indicando se foi ou nao encontrado o registro.
 bool find_by_entry_number(unsigned int number, Entry *result, FILE *file, size_t *pos) {
 	rewind(file);
 
@@ -56,6 +59,9 @@ bool find_by_entry_number(unsigned int number, Entry *result, FILE *file, size_t
 	return (number == 0);
 }
 
+//Objetivo:   Encontrar um registro, a partir da sua chave, armazena-lo guardando tambem sua posicao.
+//Parametros: Chave, ponteiro para armazenar o registro, arquivo, ponteiro para armazenar posicao relativa do registro no arquivo.
+//Retorno:    Booelano, indicando se foi ou nao encontrado o registro.
 bool find_by_entry_key(unsigned int key, Entry *result, FILE *file, size_t *pos) {
 	rewind(file);
 	
@@ -66,6 +72,9 @@ bool find_by_entry_key(unsigned int key, Entry *result, FILE *file, size_t *pos)
 	return (result->key == key);
 }
 
+//Objetivo:   Apagar registro.
+//Parametros: Arquivo, posicao do registro, seu tamanho,  posicao do proximo registro.
+//Retorno:    Booelano, se foi possivel ou nao apagar o registro.
 bool delete_entry(FILE *file, size_t pos, size_t size, size_t next) {
 	if(fseek(file, pos, SEEK_BEGIN) != 0)
 		return false;

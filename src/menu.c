@@ -2,6 +2,9 @@
 #include "entry.h"
 #include "file.h"
 
+//Objetivo:   Perguntar ao usuario, o numero do registro que ele deseja encontrar.
+//Parametros: Nao ha.
+//Retorno:    Numero digitado pelo usuario.
 size_t ask_entry_number() {
 	size_t out = 0L;
 	if(!quiet) printf("> Qual registro ver?: ");
@@ -11,6 +14,9 @@ size_t ask_entry_number() {
 	return out;
 }
 
+//Objetivo:   Perguntar ao usuario, a chave do registro que ele deseja encontrar.
+//Parametros: Nao ha.
+//Retorno:    Chave digitada pelo usuario.
 unsigned int ask_key_number(){
 	unsigned int key;
 	if(!quiet) printf("> Informe a chave do registro: ");
@@ -20,6 +26,9 @@ unsigned int ask_key_number(){
 	return key;
 }
 
+//Objetivo:   Encontrar e monstrar um registro pelo seu numero.
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 void find_and_print_entry_by_number() {
 	Entry entry;
 	FILE *file = fopen(_FNAME, "rb");
@@ -33,6 +42,9 @@ void find_and_print_entry_by_number() {
 	} 
 }
 
+//Objetivo:   Encontrar e monstrar um registro pela sua chave.
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 void find_and_print_entry_by_key(){
 	Entry entry;
 	FILE *file = fopen(_FNAME, "rb");
@@ -45,6 +57,9 @@ void find_and_print_entry_by_key(){
 	}
 }
 
+//Objetivo:   Encontrar e apagar um registro pelo sua chave.
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 void find_and_delete_entry_by_key(){
 	Entry entry;
 	FILE *file = fopen(_FNAME, "rwb+");
@@ -52,15 +67,18 @@ void find_and_delete_entry_by_key(){
 	size_t pos, next;
 	if(find_by_entry_key(key, &entry, file, &pos)){
 		// Essa gambi ficou linda que até arde os olhos! (*-*)
-		fseek(file, pos, SEEK_BEGIN);
+		fseek(file, pos, SEEK_SET);
 		read_entry(file, &entry);
-		next = ftell();
+		next = ftell(file);
 		delete_entry(file, pos, next - pos, next);
 	} else {
 		printf("Registro não encontrado");
 	}
 }
 
+//Objetivo:   Encontrar e monstrar um registro pelo campo nome.
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 void find_and_print_entry_by_firstname(){
 	Entry *entry;
 	FILE *file = fopen(_FNAME, "rb");
@@ -68,6 +86,9 @@ void find_and_print_entry_by_firstname(){
 	
 }
 
+//Objetivo:   Alocar uma sized string de acordo com a entrada do usuario.
+//Parametros: Ponteiro para sized string.
+//Retorno:    Nao ha.
 void ask_text(Sstr *dest) {
 #if FIXED_SIZE == 1
 	gets(dest);
@@ -80,6 +101,9 @@ void ask_text(Sstr *dest) {
 #endif	
 }
 
+//Objetivo:   Cadastrar campos do registro de acordo com a entrada do usuario.
+//Parametros: Ponteiro para registro;
+//Retorno:    Nao ha.
 void ask_entry(Entry *dest) {
 	dest->removed = false;
 	if(!quiet) printf("Novo registro:\n\t> Chave: ");
@@ -102,6 +126,9 @@ void ask_entry(Entry *dest) {
 	ask_text((char**)&(dest->phone));
 }
 
+//Objetivo:   Perguntar ao usuario, quantos registros serao inseridos.
+//Parametros: Nao ha.
+//Retorno:    Quantidade inserida pelo usuario.
 size_t ask_entries_qty() {
 	size_t out = 0L;
 	if(!quiet) printf("> Quantos registros para adicionar?: ");
@@ -111,16 +138,27 @@ size_t ask_entries_qty() {
 	return out;
 }
 
+//Objetivo:   Fazer a insercao dos registros no arquivo, de acordo com as entradas do usuario.
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 void do_insert() {
 	size_t qty = ask_entries_qty();
 	Entry buffer;
 	while(qty > 0) {
 		ask_entry(&buffer);
-		insert(1, &buffer);
+		if (find_by_entry_key(buffer.key, NULL, NULL)) {
+			insert(1, &buffer);
+		} else {
+			printf("Entrada com chave repetida! Skiping...\n");
+		};
 		qty--;
 	}
 }
 
+
+//Objetivo:   Listar todos registros que estão presentes no arquivo.
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 void do_list_all() {
 	Entry entry;
 	bool list_entries = true;
@@ -140,6 +178,10 @@ void do_list_all() {
 	}
 }
 
+
+//Objetivo:   Perguntar ao usuario, qual tarefa ele deseja realizar
+//Parametros: Nao ha.
+//Retorno:    Nao ha.
 char ask_task() {
 	if(!quiet)
 		puts("Escolha uma tarefa:\n"

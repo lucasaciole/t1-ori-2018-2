@@ -1,5 +1,8 @@
 #include "entry.h"
 
+//Objetivo:   Le, a partir do arquivo, um registro.
+//Parametros: Arquivo, registro (onde sera armazenado o resultado).
+//Retorno:    Valor Booleano que indica se foi possivel a leitura.
 bool read_entry(FILE *file, Entry *dst) {
 #if FIXED_SIZE == 1
 	// Lê o registro inteiro como um todo
@@ -46,6 +49,9 @@ bool read_entry(FILE *file, Entry *dst) {
 #endif
 }
 
+//Objetivo:   Inserir no arquivo, um novo registro.
+//Parametros: Arquivo, registro, flag para indicar.
+//Retorno:    Nao ha.
 void write_entry(FILE *file, Entry *src, bool reuse) {
 #if FIXED_SIZE == 1
 	if (reuse)
@@ -55,12 +61,15 @@ void write_entry(FILE *file, Entry *src, bool reuse) {
 	if(src->removed) {
 		fwrite(src, sizeof(Removed), 1, file);
 	} else {
-		// TODO
+		fwrite(src, sizeof((Entry){0}.removed), 1, file);
 		// { LÊ A DATA, CONTA O TAMANHO, ESCREVE O TAMANHO, ESCREVE A DATA }
 	}
 #endif
 }
 
+//Objetivo:   Exibir no console, um registro. (ou uma mensagem caso tenha sido deletado).
+//Parametros: Registro.
+//Retorno:    Nao ha.
 void print_entry(Entry *entry) {
 	int entry_number = 0;
 	if(entry->removed) {
