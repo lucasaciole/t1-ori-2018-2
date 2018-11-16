@@ -1,23 +1,23 @@
-PROJECT=oriT1
-INSTALL_PATH?=/usr/local
-
-
 CFLAGS=-Wno-discarded-qualifiers -g -I./include -O3
 CC=gcc
-BUNDLE_AR=ar rcs
 
-bin/%.o: src/%.c
-	${CC} -g -o $@ -c $< ${CFLAGS}
+bin/fixo.exe:
+	${CC} -g src/main.c src/menu.c src/entry.c src/file.c ${CFLAGS} -o $@
 
-bin/main.exe: bin/main.o bin/menu.o bin/entry.o bin/file.o
-	${CC} -g bin/main.o bin/menu.o bin/entry.o bin/file.o ${CFLAGS} -o $@
+bin/delimitado.exe:
+	${CC} -DDELIMITED -g src/main.c src/menu.c src/entry.c src/file.c ${CFLAGS} -o $@
 
-.PHONY: clean install
+.PHONY: clean
 
-all: bin/main.exe
+fixo: bin/fixo.exe
+delimitado: bin/delimitado.exe
 
-test: bin/main.exe
-	bin/main.exe < tests/1.in
+all: bin/fixo.exe bin/delimitado.exe
+
+test: all
+	bin/fixo.exe i < tests/popula.in
+	bin/delimitado.exe i < tests/popula.in
 
 clean:
-	rm bin/*.exe
+	rm bin/*
+	rm arquivo.*

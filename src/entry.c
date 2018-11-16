@@ -4,19 +4,21 @@
 //Parametros: Arquivo, registro (onde sera armazenado o resultado).
 //Retorno:    Valor Booleano que indica se foi possivel a leitura.
 bool read_entry(FILE *file, Entry *dst) {
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 	// Lê o registro inteiro como um todo
 	return fread(dst, sizeof(Entry), 1, file) == 1;
 #else
 	char buffer[512] = "", *fixnl;
-	fgets(buffer, 512 * sizeof(char), file);
+	if(fgets(buffer, 512 * sizeof(char), file) < 2) // Fim precoce do arquivo
+		return false;
 	dst->removed = (buffer[0] == 'r');
 	if(dst->removed) {
 		Removed *rem = (Removed*) dst;
 		fgets(buffer, 512 * sizeof(char), file);
 		sscanf(buffer, "%lu", &(rem->size));
 		fseek(file, rem->size-2-strlen(buffer), SEEK_CUR);
-	} else {
+	} else if(buffer[0] == '@') {
+		fgets(buffer, 512 * sizeof(char), file);
 		if(sscanf(buffer, "%u", &(dst->key)) != 1)
 			// Arquivo provavelmente corrompido, ou a gente foi parar no meio de um registro
 			return false;
@@ -31,6 +33,18 @@ bool read_entry(FILE *file, Entry *dst) {
 			data++;
 		}
 		fseek(file, 2, SEEK_CUR); //pula o "#\n"
+	} else { // Corrompido
+		buffer[0] = 0;
+		Removed *rem = (Removed*) dst;
+		rem->removed = true;
+		rem->size = 1;
+		// Em busca do vale encantado!
+		while((buffer[0] = fgetc(file)) != EOF && buffer[0] != '@'){
+			rem->size++;
+		}
+		if(buffer[0] == '@')
+			fseek(file, -1, SEEK_CUR);
+		return true;
 	}
 	return true;
 #endif
@@ -40,8 +54,10 @@ bool read_entry(FILE *file, Entry *dst) {
 //Parametros: Arquivo, registro novo.
 //Retorno:    Nao ha.
 size_t write_entry(FILE *file, Entry *src) {
-#if FIXED_SIZE == 1
-	fwrite(src, sizeof(Entry), 1, file);
+#ifndef DELIMITED
+	// Trapaça pra conseguir apenas medir o tamanho de um registro
+	if(file != NULL)
+		fwrite(src, sizeof(Entry), 1, file);
 	return sizeof(Entry);
 #else
 	char buffer[1024]="";
@@ -50,7 +66,7 @@ size_t write_entry(FILE *file, Entry *src) {
 	} else {
 		sprintf(
 			buffer,
-			"%u\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n#\n",
+			"@\n%u\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n#\n",
 			src->key,
 			src->firstname.data,
 			src->lastname.data,
@@ -61,7 +77,8 @@ size_t write_entry(FILE *file, Entry *src) {
 			src->phone.data
 			);
 	}
-	fprintf(file, buffer);
+	if(file != NULL)
+		fprintf(file, buffer);
 	return strlen(buffer) * sizeof(char);
 #endif
 }
@@ -87,7 +104,7 @@ void print_entry(Entry *entry) {
 			"\tCEP: %s,\n"
 			"\tTelefone: %s\n",
 			entry->key,
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 			entry->firstname,
 			entry->lastname,
 			entry->address,

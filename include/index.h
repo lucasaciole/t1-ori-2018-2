@@ -9,7 +9,7 @@ typedef struct {
 } i_primary_index;
 
 typedef struct {
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 	char[20] name;
 #else
 	Sstr name;

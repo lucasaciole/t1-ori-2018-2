@@ -6,17 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Macros Constantes
-#define V_DEPLOY 0
-#define V_DEBUG 1
-#define V_NOOBINGAROUND 2
-
-// Configurações
-#define FIXED_SIZE 0
-#define VERBOSE_LEVEL V_NOOBINGAROUND
-
 // Para segurar o Texto
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 typedef char* Sstr;
 #else
 typedef struct {
@@ -29,7 +20,7 @@ typedef struct {
 typedef struct {
 	bool removed;
 	unsigned int key;
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 	char lastname[20];
 	char firstname[20];
 	char address[40];
@@ -59,7 +50,7 @@ const char *ERR_FILE_NOT_FOUND;
 bool quiet;
 
 // Ajudante (:D)
-#if VERBOSE_LEVEL >= V_NOOBINGAROUND
+#ifdef VERBOSE_NOOBS
 #define dprintf(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define dprintf(...) // REJECTED

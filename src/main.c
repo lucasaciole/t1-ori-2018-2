@@ -16,7 +16,7 @@
 #include "menu.h"
 
 // Globais
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 const char *_FNAME = "arquivo.bin";
 #else
 const char *_FNAME = "arquivo.txt";
@@ -42,6 +42,9 @@ int main(int argc,char **argv){
 				break;
 			case 'k':
 				find_and_print_entry_by_key();
+				break;
+			case 'n':
+				puts("Não implementado");
 				break;
 			case 'd':
 				find_and_delete_entry_by_key();

@@ -95,7 +95,7 @@ void find_and_print_entry_by_firstname(){
 //Parametros: Ponteiro para sized string.
 //Retorno:    Nao ha.
 void ask_text(Sstr *dest) {
-#if FIXED_SIZE == 1
+#ifndef DELIMITED
 	gets(dest);
 #else
 	char buffer[512];
@@ -204,7 +204,6 @@ char ask_task() {
 			"\t[k]\tBuscar um registro por chave\n"
 			"\t[n]\tBuscar um registro por nome\n"
 			"\t[d]\tRemover um registro pela chave\n"
-			"\t[v]\tLimpar registros removidos (Reduz tamanho do arquivo)\n"
 			"> Entre a tarefa desejada [i/b/e/k/n/d/v]: "
 			);
 	char buffer[4];

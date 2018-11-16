@@ -13,15 +13,20 @@ void insert(FILE* file, size_t qty, Entry *new) {
 	rewind(file);
 
 	// Tenta reaproveitar registros removidos
-	size_t read_bytes, last_pos = 0;
+	size_t read_bytes, last_pos = 0, mesize=0;
 	while(qty >= 1 && read_entry(file, &buffer)) {
 		dprintf("Passeando por uma entry existente!\n");
-		if(buffer.removed) {
-			dprintf("Ei um cara perdido!\n");
-			fseek(file, last_pos, SEEK_CUR);
-			write_entry(file, new);
-			new++;
-			qty--;
+		if(buffer.removed) { // First Fit
+			Removed *rem = (Removed*)&buffer;
+			if(mesize == 0)
+				mesize = write_entry(0, new);
+			if(rem->size >= mesize) {
+				dprintf("Ei um cara perdido de tamanho suficiente!\n");
+				fseek(file, last_pos, SEEK_SET);
+				write_entry(file, new);
+				new++;
+				qty--;
+			}
 		}
 		last_pos = ftell(file);
 	}
@@ -73,7 +78,7 @@ bool delete_entry(FILE *file, size_t pos, size_t size) {
 	Entry data = (Entry){0};
 	*((Removed*)&data) = (Removed){true, size};
 	size_t written = write_entry(file, &data);
-#if FIXED_SIZE != 1
+#ifdef DELIMITED
 	fseek(file, size - written, SEEK_CUR);
 #endif
 	return written > 0;
