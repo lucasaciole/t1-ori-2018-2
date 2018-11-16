@@ -4,7 +4,7 @@
 #include "main.h"
 
 bool read_entry(FILE *file, Entry *dst);
-void write_entry(FILE *file, Entry *src, bool reuse);
+size_t write_entry(FILE *file, Entry *src);
 void print_entry(Entry *entry);
 
 #endif // _ORIT1_ENRY_H

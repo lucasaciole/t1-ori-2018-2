@@ -1,3 +1,8 @@
+#ifndef _ORIT1_INDEX_H
+#define _ORIT1_INDEX_H	1
+
+#include "main.h"
+
 typedef struct {
 	unsigned int RRN;
 	unsigned int key;

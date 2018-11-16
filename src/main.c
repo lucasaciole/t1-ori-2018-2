@@ -16,7 +16,11 @@
 #include "menu.h"
 
 // Globais
+#if FIXED_SIZE == 1
 const char *_FNAME = "arquivo.bin";
+#else
+const char *_FNAME = "arquivo.txt";
+#endif
 const char *ERR_FILE_NOT_FOUND = "Impossível editar arquivo!";
 bool quiet = false;
 

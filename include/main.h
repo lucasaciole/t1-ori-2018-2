@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Macros Constantes
 #define V_DEPLOY 0
@@ -11,7 +12,7 @@
 #define V_NOOBINGAROUND 2
 
 // Configurações
-#define FIXED_SIZE 1
+#define FIXED_SIZE 0
 #define VERBOSE_LEVEL V_NOOBINGAROUND
 
 // Para segurar o Texto
@@ -50,7 +51,6 @@ typedef struct {
 typedef struct {
 	bool removed;
 	size_t size;
-	size_t next;
 } Removed;
 
 // Variaveis globais

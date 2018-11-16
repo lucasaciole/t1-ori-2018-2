@@ -8,62 +8,61 @@ bool read_entry(FILE *file, Entry *dst) {
 	// Lê o registro inteiro como um todo
 	return fread(dst, sizeof(Entry), 1, file) == 1;
 #else
-	// Gambi pra continuarmente escrever diretamente pro struct
-	void *buffer_d = dst; 
-
-	// Lê o flag de removido
-	if(fread(buffer_d, sizeof((Entry){0}.removed), 1, file) != 1)
-		return false;
-	buffer_d += sizeof((Entry){0}.removed);
-
-	if (!removed) {
-		// Lê a chave
-		if(fread(buffer_d, sizeof((Entry){0}.key), 1, file) != 1)
-			return false;
-		buffer_d += sizeof((Entry){0}.key);
-
-		// Lê os 7 campos de texto
-		char aatrs = 7;
-		while(aatrs > 0) {
-			// Lê o tamanho
-			if(fread(buffer_d, sizeof((Sstr){0}.length), 1, file) != 1)
-				return false;
-			// Lê o texto
-			char *newstr = malloc(*((size_t*)buffer_d) * sizeof(char));
-			buffer_d += sizeof((Sstr){0}.length);
-			*(char**)buffer_d = newstr;
-			buffer_d += sizeof((Sstr){0}.data);
-			// Conclui este
-			aatrs--;
-		}
-
+	char buffer[512] = "", *fixnl;
+	fgets(buffer, 512 * sizeof(char), file);
+	dst->removed = (buffer[0] == 'r');
+	if(dst->removed) {
+		Removed *rem = (Removed*) dst;
+		fgets(buffer, 512 * sizeof(char), file);
+		sscanf(buffer, "%lu", &(rem->size));
+		fseek(file, rem->size-2-strlen(buffer), SEEK_CUR);
 	} else {
-		// Lê o tamanho e o próximo
-		size_t removed_data = sizeof((Removed){0}.size) + sizeof((Removed){0}.next);
-		if(fread(buffer_d, removed_data, 1, file) != 1)
+		if(sscanf(buffer, "%u", &(dst->key)) != 1)
+			// Arquivo provavelmente corrompido, ou a gente foi parar no meio de um registro
 			return false;
-		// Vai manualmente pro seguinte
-		fseek(file, ((Removed*)dst)->next, SEEK_BEGIN);
+		Sstr *data=&(dst->lastname), *last_data=&(dst->phone);
+		while(data <= last_data) {
+			fgets(buffer, 512 * sizeof(char), file);
+			fixnl = strchr(buffer, '\n');
+			if(fixnl > buffer) *fixnl = 0;
+			data->length = strlen(buffer);
+			data->data = (char*) malloc(data->length*sizeof(char)+1);
+			memcpy(data->data, buffer, data->length*sizeof(char)+1);
+			data++;
+		}
+		fseek(file, 2, SEEK_CUR); //pula o "#\n"
 	}
 	return true;
 #endif
 }
 
 //Objetivo:   Inserir no arquivo, um novo registro.
-//Parametros: Arquivo, registro, flag para indicar.
+//Parametros: Arquivo, registro novo.
 //Retorno:    Nao ha.
-void write_entry(FILE *file, Entry *src, bool reuse) {
+size_t write_entry(FILE *file, Entry *src) {
 #if FIXED_SIZE == 1
-	if (reuse)
-		fseek(file, - sizeof(Entry), SEEK_CUR);
 	fwrite(src, sizeof(Entry), 1, file);
+	return sizeof(Entry);
 #else
-	if(src->removed) {
-		fwrite(src, sizeof(Removed), 1, file);
+	char buffer[1024]="";
+	if (src->removed) {
+		sprintf(buffer, "r\n%lu\n#\n", ((Removed*)src)->size);
 	} else {
-		fwrite(src, sizeof((Entry){0}.removed), 1, file);
-		// { LÊ A DATA, CONTA O TAMANHO, ESCREVE O TAMANHO, ESCREVE A DATA }
+		sprintf(
+			buffer,
+			"%u\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n#\n",
+			src->key,
+			src->firstname.data,
+			src->lastname.data,
+			src->address.data,
+			src->city.data,
+			src->uf.data,
+			src->zip.data,
+			src->phone.data
+			);
 	}
+	fprintf(file, buffer);
+	return strlen(buffer) * sizeof(char);
 #endif
 }
 
@@ -74,8 +73,8 @@ void print_entry(Entry *entry) {
 	int entry_number = 0;
 	if(entry->removed) {
 		Removed *removed = (Removed*) entry;
-		printf("Registro removido! (%lu bytes -> next at %lu)\n"
-			, removed->size, removed->next);
+		printf("Registro removido! (%lu bytes)\n",
+			removed->size);
 	}
 	else
 		printf("Registro #\n"

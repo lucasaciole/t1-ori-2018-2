@@ -5,12 +5,12 @@
 //Objetivo:   Perguntar ao usuario, o numero do registro que ele deseja encontrar.
 //Parametros: Nao ha.
 //Retorno:    Numero digitado pelo usuario.
-size_t ask_entry_number() {
-	size_t out = 0L;
+unsigned int ask_entry_number() {
+	unsigned int out = 0U;
 	if(!quiet) printf("> Qual registro ver?: ");
 	char buffer[32] = "";
 	fgets(buffer, sizeof(char) * 32, stdin);
-	sscanf(buffer, "%lu", &out);
+	sscanf(buffer, "%u", &out);
 	return out;
 }
 
@@ -32,14 +32,15 @@ unsigned int ask_key_number(){
 void find_and_print_entry_by_number() {
 	Entry entry;
 	FILE *file = fopen(_FNAME, "rb");
-	rewind(file);
-	int entry_number = ask_entry_number();
+	if(file == NULL) return;
+	unsigned int entry_number = ask_entry_number();
 	size_t pos;
 	if(find_by_entry_number(entry_number - 1, &entry, file, &pos)) {
 		print_entry(&entry);
 	} else {
 		printf("Registro não encontrado");
-	} 
+	}
+	fclose(file);
 }
 
 //Objetivo:   Encontrar e monstrar um registro pela sua chave.
@@ -48,6 +49,7 @@ void find_and_print_entry_by_number() {
 void find_and_print_entry_by_key(){
 	Entry entry;
 	FILE *file = fopen(_FNAME, "rb");
+	if(file == NULL) return;
 	unsigned int key = ask_key_number();
 	size_t pos;
 	if(find_by_entry_key(key, &entry, file, &pos)){
@@ -55,6 +57,7 @@ void find_and_print_entry_by_key(){
 	} else {
 		printf("Registro não encontrado");
 	}
+	fclose(file);
 }
 
 //Objetivo:   Encontrar e apagar um registro pelo sua chave.
@@ -63,6 +66,7 @@ void find_and_print_entry_by_key(){
 void find_and_delete_entry_by_key(){
 	Entry entry;
 	FILE *file = fopen(_FNAME, "rwb+");
+	if(file == NULL) return; // se o arquivo nem existe, nem tem coisa pra excluir...
 	unsigned int key = ask_key_number();
 	size_t pos, next;
 	if(find_by_entry_key(key, &entry, file, &pos)){
@@ -70,10 +74,11 @@ void find_and_delete_entry_by_key(){
 		fseek(file, pos, SEEK_SET);
 		read_entry(file, &entry);
 		next = ftell(file);
-		delete_entry(file, pos, next - pos, next);
+		delete_entry(file, pos, next - pos);
 	} else {
-		printf("Registro não encontrado");
+		printf("Registro nao encontrado");
 	}
+	fclose(file);
 }
 
 //Objetivo:   Encontrar e monstrar um registro pelo campo nome.
@@ -95,9 +100,11 @@ void ask_text(Sstr *dest) {
 #else
 	char buffer[512];
 	fgets(buffer, sizeof(char) * 512, stdin);
+	char * newline = strchr(buffer, '\n');
+	if(newline != NULL) *newline = 0;
 	dest->length = strlen(buffer);
-	dest->data = (char*) malloc(dest->length * sizeof(char));
-	strcpy(dest->data, buffer);
+	dest->data = (char*) malloc(dest->length * sizeof(char) +1);
+	memcpy(dest->data, buffer, dest->length * sizeof(char) +1);
 #endif	
 }
 
@@ -114,7 +121,7 @@ void ask_entry(Entry *dest) {
 	ask_text((char**)&(dest->firstname));
 	if(!quiet) printf("\t> Sobrenome: ");
 	ask_text((char**)&(dest->lastname));
-	if(!quiet) printf("\t> Endereço: ");
+	if(!quiet) printf("\t> Endereco: ");
 	ask_text((char**)&(dest->address));
 	if(!quiet) printf("\t> Cidade: ");
 	ask_text((char**)&(dest->city));
@@ -143,16 +150,21 @@ size_t ask_entries_qty() {
 //Retorno:    Nao ha.
 void do_insert() {
 	size_t qty = ask_entries_qty();
-	Entry buffer;
+	FILE *file = fopen(_FNAME, "rwb+");
+	if(file == NULL) file = fopen(_FNAME, "wb"); //o + exige que o arquivo exista
+	if(file == NULL) return;
+	Entry buffer, new;
+	size_t pos;
 	while(qty > 0) {
-		ask_entry(&buffer);
-		if (find_by_entry_key(buffer.key, NULL, NULL)) {
-			insert(1, &buffer);
-		} else {
+		ask_entry(&new);
+		if (find_by_entry_key(new.key, &buffer, file, &pos)) {
 			printf("Entrada com chave repetida! Skiping...\n");
+		} else {
+			insert(file, 1, &new);
 		};
 		qty--;
 	}
+	fclose(file);
 }
 
 
@@ -163,11 +175,12 @@ void do_list_all() {
 	Entry entry;
 	bool list_entries = true;
 	FILE *file = fopen(_FNAME, "rb");
+	if(file == NULL) return;
 	//rewind(file);
 	while (read_entry(file, &entry) && list_entries) {
 		print_entry(&entry);
 		if(!quiet) {
-			printf("[n] Proximo registro");
+			printf("[n] Proximo registro [c] Sair. Escolha: ");
 			char buffer[4];
 			fgets(buffer, sizeof(char) * 4, stdin);
 			if(buffer[0] == 'c') {
